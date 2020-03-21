@@ -201,7 +201,7 @@ class DynDnsUpdater
 		foreach ($zoneFile as $line)
 		{
 			if ( ($line['type'] == 'A') &&
-				 ($host == DYNDNS_ALLHOSTS || (strcasecmp($line['name'], $host.'.') === 0)) )
+				 ($host == 'DYNDNS_ALLHOSTS' || (strcasecmp($line['name'], $host.'.') === 0)) )
 			{
 				$hosts[] = $line;
 			}
