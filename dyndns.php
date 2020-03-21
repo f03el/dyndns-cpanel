@@ -50,12 +50,12 @@ if (empty($_GET['hostname']))
 // Use server value for IP if none was specified
 $ip = $_GET['myip'];
 if (empty($ip))
-	$ip = $_SERVER['REMOTE_ADDR'];	
+	$ip = $_SERVER['REMOTE_ADDR'];
 
 // Validate IP address
 if (!filter_var($ip, FILTER_VALIDATE_IP))
 	die('Invalid IP address');
-	
+
 // Get and validate ttl
 $ttl = $_GET['ttl'];
 if (!is_numeric($ttl) || $ttl < 60)
@@ -86,7 +86,7 @@ exit;
 
 class DynDnsUpdater
 {
-	private $curl;	
+	private $curl;
 	private $cpanelHost;
 	private $cpanelUsername;
 	private $cpanelPassword;
@@ -98,7 +98,7 @@ class DynDnsUpdater
 	function __construct()
 	{
 		// Create curl object
-		$this->curl = curl_init();		
+		$this->curl = curl_init();
 
 		$curlDefaults = array(
 			CURLOPT_SSL_VERIFYPEER => false, 	// Allow self-signed certs
@@ -108,7 +108,7 @@ class DynDnsUpdater
 
 		curl_setopt_array($this->curl, $curlDefaults);
 	}
-	
+
 	function __destruct()
 	{
 		// Release curl object
@@ -122,33 +122,33 @@ class DynDnsUpdater
 	{
 		$this->cpanelHost = $host;
 	}
-	
+
 	function setCpanelUsername($username)
 	{
 		$this->cpanelUsername = $username;
 	}
-	
+
 	function setCpanelPassword($password)
 	{
 		$this->cpanelPassword = $password;
 	}
-	
+
 	function setDomain($domain)
 	{
 		$this->domain = $domain;
 	}
 
 	/***** Public Functions *****/
-	
-	
+
+
 
 	public function updateHost($host, $ip)
 	{
 		$hosts = $this->getHost($host);
-		        
+
 		if ($hosts === false)
 			return false;
-		
+
 		foreach ($hosts as $hostInfo)
 		{
 			if ($hostInfo['address'] == $ip)
@@ -156,53 +156,53 @@ class DynDnsUpdater
 				echo "nochg $ip\n";
 				return true;
 			}
-		
+
 			$updateParams = array(
-				'cpanel_jsonapi_module' => 'ZoneEdit',    
+				'cpanel_jsonapi_module' => 'ZoneEdit',
 				'cpanel_jsonapi_func' => 'edit_zone_record',
 				'domain' => $this->domain,
 				'Line' => $hostInfo['Line'],
 				'type' => $hostInfo['type'],
 				'address' => $ip
 			);
-		
-               
-        
+
+
+
 			$result = $this->cpanelRequest($updateParams);
-		
+
 			if ($result)
 				echo "good $ip\n";
 			else
 				echo "Update failed: {$hostInfo['name']}\n";
 		}
 	}
-	
+
 
 	/***** Private Functions *****/
 
 	private function getHost($host)
 	{
 		$fetchzoneParams = array(
-			'cpanel_jsonapi_module' => 'ZoneEdit',    
+			'cpanel_jsonapi_module' => 'ZoneEdit',
 			'cpanel_jsonapi_func' => 'fetchzone_records',
 			'domain' => $this->domain,
 			'customonly' => 1
 		);
-		
+
 		$result = $this->cpanelRequest($fetchzoneParams);
 
 		if (empty($result['data']))
 			return false;
-		
+
 		// Get the payload
 		$zoneFile = $result['data'];
-		
+
 		$hosts = array();
 		foreach ($zoneFile as $line)
 		{
-			if ( ($line['type'] == 'A') && 
+			if ( ($line['type'] == 'A') &&
 				 ($host == DYNDNS_ALLHOSTS || (strcasecmp($line['name'], $host.'.') === 0)) )
-			{	
+			{
 				$hosts[] = $line;
 			}
 		}
@@ -211,30 +211,30 @@ class DynDnsUpdater
 			return $hosts;
 		else
 			echo "nohost\n";
-		
+
 		return false;
 	}
-	
+
 	private function cpanelRequest($params)
 	{
 		if (empty($this->curl) || empty($params))
 			return false;
-	
-		curl_setopt($this->curl, CURLOPT_URL, $this->cpanelHost.'/json-api/cpanel?'.http_build_query($params));		
+
+		curl_setopt($this->curl, CURLOPT_URL, $this->cpanelHost.'/json-api/cpanel?'.http_build_query($params));
 		curl_setopt($this->curl, CURLOPT_HTTPHEADER, array( 'Authorization: Basic ' . base64_encode($this->cpanelUsername.':'.$this->cpanelPassword)) );
-		
+
 		$result = curl_exec($this->curl);
 		$error = false;
-		
+
 		// Check for valid result
 		if ($result === false)
 		{
 			echo curl_error($this->curl)."\n";
-			
+
 			// If curl didn't return anything, there's nothing else to check
 			return false;
 		}
-				
+
 		// Check for error code
 		if (curl_getinfo($this->curl, CURLINFO_HTTP_CODE) != '200')
 		{
@@ -242,10 +242,10 @@ class DynDnsUpdater
 			echo "Error $err\n";
 			$error = true;
 		}
-		
+
 		// Attempt to process result
 		$jsonResult = json_decode($result, true);
-		
+
 		if (empty($jsonResult))
 		{
 			echo "Invalid JSON: \n".$result."\n";
@@ -261,14 +261,14 @@ class DynDnsUpdater
 		{
 			$error = true;
 		}
-		
+
 		// Check for cpanel error
 		if (isset($jsonResult['error']))
 		{
 			echo $jsonResult['error']."\n";
 			$error = true;
 		}
-		
+
 		if ($error)
 		{
 			// No sense going past here... no more information to get
