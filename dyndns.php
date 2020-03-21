@@ -21,6 +21,9 @@ $php_auth_pw='password';
 #The url of the cpanel server
 $dyndnsCpanel = 'https://example.com:2083';
 
+# Set to true if the cPanel password is an API token
+$dyndnsCpanelTokenAuth = false;
+
 #username and password used to login to cpanel
 $dyndnsCpanelUser = 'username';
 $dyndnsCpanelPass = 'password';
@@ -221,7 +224,10 @@ class DynDnsUpdater
 			return false;
 
 		curl_setopt($this->curl, CURLOPT_URL, $this->cpanelHost.'/json-api/cpanel?'.http_build_query($params));
-		curl_setopt($this->curl, CURLOPT_HTTPHEADER, array( 'Authorization: Basic ' . base64_encode($this->cpanelUsername.':'.$this->cpanelPassword)) );
+		if ($dyndnsCpanelTokenAuth)
+			curl_setopt($this->curl, CURLOPT_HTTPHEADER, array( "Authorization: cpanel " . $this->cpanelUsername.':'.$this->cpanelPassword) );
+		else
+			curl_setopt($this->curl, CURLOPT_HTTPHEADER, array( "Authorization: Basic " . base64_encode($this->cpanelUsername.':'.$this->cpanelPassword)) );
 
 		$result = curl_exec($this->curl);
 		$error = false;
