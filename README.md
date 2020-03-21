@@ -21,7 +21,7 @@ Most dyndns clients will work to update your cpanel using this script as the cus
 `http://username:password@website.com/dyndns.php?hostname=remote.domain.tld&myip=192.168.1.1`
 
 ##Setup
-Update the variables at the top of the script to match your setting. Comments are provided to explain the values.
+Copy `config.original.php` to `config.php` and update the variables to match your setting. Comments are provided to explain the values.
 
 Under certain server configurations `customonly` on line 209 must be set to 0 in order to find subdomain records. See https://github.com/ethanpil/dyndns-cpanel/issues/3
 
